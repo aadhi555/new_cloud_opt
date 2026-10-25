@@ -95,11 +95,11 @@ export function createChatHandler(
         dotenv.config({ path: path.join(__dirname, '..', '..', '.env'), override: true });
       }
 
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
+      const apiKey = process.env.GEMINI_API_KEY?.trim();
+      if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey === 'your_key_here') {
         return res.status(200).json({
           reply:
-            "⚠️ **E.D.I.T.H. Offline**: API key is not configured.\n\nPlease add your API key to `.env`:\n```env\nGEMINI_API_KEY=your_key_here\n```",
+            "⚠️ **eDIth Offline**: Gemini API key is not configured.\n\nPlease obtain an API key from [Google AI Studio](https://aistudio.google.com) and add it to your `.env` file on the server:\n```env\nGEMINI_API_KEY=AIzaSy...\n```\nThen restart `smartcloud-optimizer`.",
           warning: 'MISSING_API_KEY',
         });
       }
@@ -134,15 +134,16 @@ export function createChatHandler(
         parts: [{ text: message.trim() }],
       });
 
-      // Configurable model selection with high-speed defaults
-      const preferredModel = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest';
+      // Configurable model selection with official production Gemini models
+      const preferredModel = (process.env.GEMINI_MODEL || 'gemini-2.0-flash').trim();
       const candidateModels = Array.from(
         new Set([
           preferredModel,
-          'gemini-flash-lite-latest',
-          'gemini-3.1-flash-lite',
-          'gemini-3.5-flash',
-          'gemini-3.8-flash',
+          'gemini-2.0-flash',
+          'gemini-1.5-flash',
+          'gemini-2.5-flash',
+          'gemini-2.0-flash-lite',
+          'gemini-1.5-pro',
         ])
       );
       let response: any = null;

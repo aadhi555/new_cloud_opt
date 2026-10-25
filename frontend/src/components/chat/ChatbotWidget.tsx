@@ -190,8 +190,7 @@ export const ChatbotWidget: React.FC = () => {
       const errorMsg: Message = {
         id: `err-${Date.now()}`,
         role: "model",
-        content:
-          "⚠️ **System Alert**: Unable to connect to the optimizer API. Please ensure `optimizer-engine-server` is active on port 8002.",
+        content: `⚠️ **eDIth Error**: ${err?.message || "Unable to connect to the optimizer API. Please ensure `optimizer-engine-server` is active on port 8002."}`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, errorMsg]);

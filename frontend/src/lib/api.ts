@@ -1,5 +1,34 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002";
-const INFRA_BASE = process.env.NEXT_PUBLIC_INFRA_URL || "http://localhost:8001";
+export function getApiBase(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL;
+  if (configured && !configured.includes("localhost") && !configured.includes("127.0.0.1")) {
+    return configured.replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return `${window.location.protocol}//${host}:8002`;
+    }
+  }
+
+  return (configured || "http://localhost:8002").replace(/\/$/, "");
+}
+
+export function getInfraBase(): string {
+  const configured = process.env.NEXT_PUBLIC_INFRA_URL;
+  if (configured && !configured.includes("localhost") && !configured.includes("127.0.0.1")) {
+    return configured.replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined" && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host && host !== "localhost" && host !== "127.0.0.1") {
+      return `${window.location.protocol}//${host}:8001`;
+    }
+  }
+
+  return (configured || "http://localhost:8001").replace(/\/$/, "");
+}
 
 export async function fetchOverview(filters?: { region?: string; environment?: string; team?: string }) {
   const params = new URLSearchParams();
@@ -7,7 +36,7 @@ export async function fetchOverview(filters?: { region?: string; environment?: s
   if (filters?.environment && filters.environment !== "all") params.append("environment", filters.environment);
   if (filters?.team && filters.team !== "all") params.append("team", filters.team);
 
-  const res = await fetch(`${API_BASE}/api/overview?${params.toString()}`);
+  const res = await fetch(`${getApiBase()}/api/overview?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch overview");
   return res.json();
 }
@@ -26,13 +55,13 @@ export async function fetchResources(filters?: {
   if (filters?.type && filters.type !== "all") params.append("type", filters.type);
   if (filters?.status && filters.status !== "all") params.append("status", filters.status);
 
-  const res = await fetch(`${API_BASE}/api/resources?${params.toString()}`);
+  const res = await fetch(`${getApiBase()}/api/resources?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch resources");
   return res.json();
 }
 
 export async function fetchResourceMetrics(resourceId: string) {
-  const res = await fetch(`${API_BASE}/api/resources/${resourceId}/metrics`);
+  const res = await fetch(`${getApiBase()}/api/resources/${resourceId}/metrics`);
   if (!res.ok) throw new Error(`Failed to fetch metrics for ${resourceId}`);
   return res.json();
 }
@@ -49,13 +78,13 @@ export async function fetchRecommendations(filters?: {
   if (filters?.status && filters.status !== "all") params.append("status", filters.status);
   if (filters?.environment && filters.environment !== "all") params.append("environment", filters.environment);
 
-  const res = await fetch(`${API_BASE}/api/recommendations?${params.toString()}`);
+  const res = await fetch(`${getApiBase()}/api/recommendations?${params.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch recommendations");
   return res.json();
 }
 
 export async function updateRecommendationStatus(id: string, status: "accepted" | "rejected" | "pending") {
-  const res = await fetch(`${API_BASE}/api/recommendations/${id}/status`, {
+  const res = await fetch(`${getApiBase()}/api/recommendations/${id}/status`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -65,7 +94,7 @@ export async function updateRecommendationStatus(id: string, status: "accepted" 
 }
 
 export async function bulkUpdateRecommendations(action: "accept_low_risk" | "accept_all" | "reset") {
-  const res = await fetch(`${API_BASE}/api/recommendations/bulk-status`, {
+  const res = await fetch(`${getApiBase()}/api/recommendations/bulk-status`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action }),
@@ -82,7 +111,7 @@ export async function runWhatIfSimulation(params: {
   delete_unattached_volumes_older_than_days: number;
   release_idle_ips: boolean;
 }) {
-  const res = await fetch(`${API_BASE}/api/what-if`, {
+  const res = await fetch(`${getApiBase()}/api/what-if`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
@@ -92,7 +121,7 @@ export async function runWhatIfSimulation(params: {
 }
 
 export async function fetchAlertsAndForecast() {
-  const res = await fetch(`${API_BASE}/api/alerts-and-forecast`);
+  const res = await fetch(`${getApiBase()}/api/alerts-and-forecast`);
   if (!res.ok) throw new Error("Failed to fetch alerts and forecast");
   return res.json();
 }
@@ -100,7 +129,7 @@ export async function fetchAlertsAndForecast() {
 export async function triggerLiveAnomaly(targetResourceId?: string) {
   // First attempt via Optimizer proxy (keeps VM1 private in Azure)
   try {
-    const res = await fetch(`${API_BASE}/api/sim/trigger-anomaly`, {
+    const res = await fetch(`${getApiBase()}/api/sim/trigger-anomaly`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target_resource_id: targetResourceId }),
@@ -110,7 +139,7 @@ export async function triggerLiveAnomaly(targetResourceId?: string) {
     // Fall back to direct infra URL if optimizer proxy isn't reached
   }
 
-  const res = await fetch(`${INFRA_BASE}/sim/trigger-anomaly`, {
+  const res = await fetch(`${getInfraBase()}/sim/trigger-anomaly`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ target_resource_id: targetResourceId }),
@@ -125,7 +154,7 @@ export interface ChatMessage {
 }
 
 export async function sendChatMessage(message: string, history: ChatMessage[] = []) {
-  const res = await fetch(`${API_BASE}/api/chat`, {
+  const res = await fetch(`${getApiBase()}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, history }),

@@ -37,7 +37,7 @@ services:
       - INFRA_SERVER_URL=http://utho-infra-server:8001
       - PYTHON_BIN=python
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-flash-lite-latest}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.0-flash}
     depends_on:
       utho-infra-server:
         condition: service_healthy

@@ -14,7 +14,7 @@ import { WhatIfSimulator } from "@/components/simulator/WhatIfSimulator";
 import { AlertsAndForecastView } from "@/components/alerts/AlertsAndForecastView";
 import { AssumptionsSheet } from "@/components/assumptions/AssumptionsSheet";
 import { ChatbotWidget } from "@/components/chat/ChatbotWidget";
-import { fetchOverview, fetchResources, fetchRecommendations } from "@/lib/api";
+import { fetchOverview, fetchResources, fetchRecommendations, getApiBase } from "@/lib/api";
 import { Filter, RefreshCw } from "lucide-react";
 
 export default function DashboardPage() {
@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   // Connect to SSE stream from Server 2
   useEffect(() => {
-    const sseUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002"}/api/stream`;
+    const sseUrl = `${getApiBase()}/api/stream`;
     const eventSource = new EventSource(sseUrl);
 
     eventSource.onmessage = (event) => {
